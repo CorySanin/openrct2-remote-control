@@ -1,11 +1,16 @@
-# openrct2-discord-bridge
+# openrct2-remote-control
 
-A plugin and Node app for OpenRCT2. Sends in-game chat to Discord and vice versa. Also sends alerts to Discord about various in-game events, such as the park rating dropping below a threshold for example.
+Execute server operations by using commands in chat or over a TCP connection.
 
-## Setup
+## Commands
 
-Modify config.json5 with the appropriate parameters and start the server/bot with `node index.js`. Make sure the plugin (`lib/discord-bridge.js`) is installed and start up an OpenRCT2 multiplayer server.
+If initiating these over in-game chat, the command must be proceeded by a `!` or a `/`. The player must also have the `kick_player` permission.
+
+- **quit** - Aborts the server process immediately
+- **save** \[filename] - Saves the park. An optional filename can be specified.
+- **pause** - Pauses/unpauses the game
+- **capture** \[param: value ...] - Takes a screenshot and saves it to the screenshot directory. The following otional parameters can be provided: filename, width, height, x, y, zoom, rotation. For a full-park screenshot, only pass in values for zoom and rotation. *Does not work on a headless server.*
 
 ## Docker Setup
 
-There are some additional steps for running this configuration in Docker. The plugin configuration needs to have the hostname set (see `config/openrct2/plugin.store.json` for an example). Then the OpenRCT2 configuration must be set to allow outbound traffic to the node server (see `config/openrct2/config.ini`). If you want to use Docker for both OpenRCT2 and the Discord bridge app, using Docker Compose can make your life a lot easier. See `docker-compose.yml` for an example on how that might look.
+There are some additional steps for running this configuration in Docker. The plugin configuration needs to have the hostname set to 0.0.0.0 (see `config/openrct2/plugin.store.json` for an example). Then the OpenRCT2 configuration must be set to allow binding to that address (see `config/openrct2/config.ini`).
