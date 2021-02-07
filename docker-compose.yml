@@ -2,27 +2,16 @@ version: '2'
 
 services:
    openrct2:
-      container_name: openrct2-cli
-      image: corysanin/openrct2-cli:develop
+      container_name: openrct2-cli-for-controller
+      image: openrct2/openrct2-cli:develop
       ports:
+         - 35711:35711
          - 11753:11753
          - 11754:11754/udp
       volumes:
          - ./lib:/home/openrct2/.config/OpenRCT2/plugin/bridge
          - ./config/openrct2/plugin.store.json:/home/openrct2/.config/OpenRCT2/plugin.store.json
          - ./config/openrct2/config.ini:/home/openrct2/.config/OpenRCT2/config.ini
-      depends_on:
-         - discord-bridge
       command:
          - "host"
          - "https://taunt.bot/rct/scenarios/"
-   
-   discord-bridge:
-      container_name: openrct2-discord-bridge
-      build:
-         context: ./
-         dockerfile: ./Dockerfile
-      ports:
-         - 35711:35711
-      volumes:
-         - ./config:/usr/src/openrct2-discord/config

@@ -1,34 +1,25 @@
 {
-  "name": "openrct2-discord-bridge",
+  "name": "openrct2-remote-control",
   "version": "1.0.0",
-  "description": "OpenRCT2 to Discord communication",
-  "main": "index.js",
+  "description": "Control OpenRCT2 servers... remotely",
   "scripts": {
     "build": "tsc",
     "gettypes": "curl https://raw.githubusercontent.com/OpenRCT2/OpenRCT2/develop/distribution/openrct2.d.ts > types/openrct2.d.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CorySanin/openrct2-discord-bridge.git"
-  },
-  "dependencies": {
-    "bufferutil": "4.0.2",
-    "discord.js": "12.5.1",
-    "erlpack": "github:discordapp/erlpack",
-    "json5": "2.1.3",
-    "utf-8-validate": "5.0.3",
-    "zlib-sync": "0.1.7"
+    "url": "git+https://github.com/CorySanin/openrct2-remote-control.git"
   },
   "keywords": [
     "openrct2",
     "plugin",
-    "discord",
-    "bot"
+    "remote",
+    "command"
   ],
   "author": "Cory Sanin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CorySanin/openrct2-discord-bridge/issues"
+    "url": "https://github.com/CorySanin/openrct2-remote-control/issues"
   },
-  "homepage": "https://github.com/CorySanin/openrct2-discord-bridge#readme"
+  "homepage": "https://github.com/CorySanin/openrct2-remote-control#readme"
 }

@@ -8,5 +8,5 @@
         "removeComments": true,
         "outDir": "lib"
     },
-    "files": ["src/discord-bridge.ts"]
+    "files": ["src/remote-control.ts"]
 }
