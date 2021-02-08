@@ -4,6 +4,7 @@ const NEWLINE = new RegExp('\n', 'g');
 const PREFIX = new RegExp('^(!|/)');
 const QUIT = new RegExp('^(abort|exit|halt|quit|stop)($| )', 'i');
 const SAVE = new RegExp('^save($| )', 'i');
+const SAY = new RegExp('^(say|send|broadcast)($| )', 'i');
 const PAUSE = new RegExp('^(pause|unpause)($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
@@ -21,9 +22,8 @@ function doCommand(command) {
     else if ((args = doesCommandMatch(command, [PAUSE])) !== false) {
         context.executeAction('pausetoggle', {}, doNothing);
     }
-    else if ((args = doesCommandMatch(command, [new RegExp('^test($| )', 'i')])) !== false) {
-        console.log('test');
-        network.sendMessage(h);
+    else if ((args = doesCommandMatch(command, [SAY])) !== false && typeof args === 'string' && args.length > 0) {
+        network.sendMessage(args);
     }
     else if ((args = doesCommandMatch(command, [CAPTURE])) !== false) {
         // this will totally crash in headless mode 🙃
@@ -122,7 +122,6 @@ function main() {
         h = host;
 
         server.on('connection', (socket) => {
-            network.sendMessage('got client');
             socket.on('data', (data) => {
                 doCommand(data);
             });
