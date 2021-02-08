@@ -36,7 +36,6 @@ function doCommand(command) {
 
         let match;
         while ((match = CAPTUREPARAMS.exec(args)) !== null) {
-            console.log(match);
             let value = null;
             if (match[1] === 'filename') {
                 value = match[2];
@@ -57,8 +56,6 @@ function doCommand(command) {
         if ('x' in position && 'y' in position) {
             options.position = position as CoordsXY;
         }
-
-        console.log(options);
 
         context.captureImage(options)
     }
