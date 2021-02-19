@@ -38,6 +38,11 @@ declare global {
     /** APIs for the current scenario. */
     var scenario: Scenario;
     /**
+     * APIs for creating and editing title sequences.
+     * These will only be available to clients that are not running headless mode.
+    */
+    var titleSequenceManager: TitleSequenceManager;
+    /**
      * APIs for controlling the user interface.
      * These will only be available to servers and clients that are not running headless mode.
      * Plugin writers should check if ui is available using `typeof ui !== 'undefined'`.
@@ -1899,6 +1904,12 @@ declare global {
         id: string;
         cursor?: CursorType;
 
+        /**
+         * What types of object in the game can be selected with the tool.
+         * E.g. only specify terrain if you only want a tile selection.
+         */
+        filter?: ToolFilter[];
+
         onStart?: () => void;
         onDown?: (e: ToolEventArgs) => void;
         onMove?: (e: ToolEventArgs) => void;
@@ -1934,6 +1945,20 @@ declare global {
         "walk_down" |
         "water_down" |
         "zzz";
+
+    type ToolFilter =
+        "terrain" |
+        "entity" |
+        "ride" |
+        "water" |
+        "scenery" |
+        "footpath" |
+        "footpath_item" |
+        "park_entrance" |
+        "wall" |
+        "large_scenery" |
+        "label" |
+        "banner";
 
     /**
      * Represents the type of a widget, e.g. button or label.
@@ -2167,5 +2192,179 @@ declare global {
         off(event: 'close', callback: (hadError: boolean) => void): Socket;
         off(event: 'error', callback: (hadError: boolean) => void): Socket;
         off(event: 'data', callback: (data: string) => void): Socket;
+    }
+
+    interface TitleSequence {
+        /**
+         * The name of the title sequence.
+         */
+        name: string;
+
+        /**
+         * The full path of the title sequence.
+         */
+        readonly path: string;
+
+        /**
+         * Whether the title sequence is a single file or directory.
+         */
+        readonly isDirectory: boolean;
+
+        /**
+         * Whether or not the title sequence is read-only (e.g. a pre-installed sequence).
+         */
+        readonly isReadOnly: boolean;
+
+        /**
+         * The parks stored within this title sequence.
+         */
+        readonly parks: TitleSequencePark[];
+
+        /**
+         * The commands that describe how to play the title sequence.
+         */
+        commands: TitleSequenceCommand[];
+
+        /**
+         * Whether the title sequence is currently playing.
+         */
+        readonly isPlaying: boolean;
+
+        /**
+         * The current command the title sequence is on if playing.
+         */
+        readonly position: number | null;
+
+        addPark(path: string, fileName: string): void;
+
+        /**
+         * Creates a new title sequence identical to this one.
+         * @param name The name of the new title sequence.
+         */
+        clone(name: string): TitleSequence;
+
+        /**
+         * Deletes this title sequence from disc.
+         */
+        delete(): void;
+
+        /**
+         * Play the title sequence.
+         */
+        play(): void;
+
+        /**
+         * Seek to a specific command in the sequence.
+         * @param position The index of the command to seek to.
+         */
+        seek(position: number): void;
+
+        /**
+         * Stops playing the title sequence.
+         */
+        stop(): void;
+    }
+
+    interface TitleSequencePark {
+        /**
+         * The file name of the park.
+         */
+        fileName: string;
+
+        /**
+         * Deletes this park from the title sequence.
+         */
+        delete(): void;
+
+        /**
+         * Loads this park.
+         */
+        load(): void;
+    }
+
+    type TitleSequenceCommandType =
+        'load' |
+        'loadsc' |
+        'location' |
+        'rotate' |
+        'zoom' |
+        'speed' |
+        'follow' |
+        'wait' |
+        'restart' |
+        'end';
+
+    interface LoadTitleSequenceCommand {
+        type: 'load';
+        index: number;
+    }
+
+    interface LocationTitleSequenceCommand {
+        type: 'location';
+        x: number;
+        y: number;
+    }
+
+    interface RotateTitleSequenceCommand {
+        type: 'rotate';
+        rotations: number;
+    }
+
+    interface ZoomTitleSequenceCommand {
+        type: 'zoom';
+        zoom: number;
+    }
+
+    interface FollowTitleSequenceCommand {
+        type: 'follow';
+        id: number | null;
+    }
+
+    interface SpeedTitleSequenceCommand {
+        type: 'speed';
+        speed: number;
+    }
+
+    interface WaitTitleSequenceCommand {
+        type: 'wait';
+        duration: number;
+    }
+
+    interface LoadScenarioTitleSequenceCommand {
+        type: 'loadsc';
+        scenario: string;
+    }
+
+    interface RestartTitleSequenceCommand {
+        type: 'restart';
+    }
+
+    interface EndTitleSequenceCommand {
+        type: 'end';
+    }
+
+    type TitleSequenceCommand =
+        LoadTitleSequenceCommand |
+        LocationTitleSequenceCommand |
+        RotateTitleSequenceCommand |
+        ZoomTitleSequenceCommand |
+        FollowTitleSequenceCommand |
+        SpeedTitleSequenceCommand |
+        WaitTitleSequenceCommand |
+        LoadScenarioTitleSequenceCommand |
+        RestartTitleSequenceCommand |
+        EndTitleSequenceCommand;
+
+    interface TitleSequenceManager {
+        /**
+         * Gets all the available title sequences.
+         */
+        readonly titleSequences: TitleSequence[];
+
+        /**
+         * Creates a new blank title sequence.
+         * @param name The name of the title sequence.
+         */
+        create(name: string): TitleSequence;
     }
 }

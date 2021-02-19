@@ -6,12 +6,21 @@ const QUIT = new RegExp('^(abort|exit|halt|quit|stop)($| )', 'i');
 const SAVE = new RegExp('^save($| )', 'i');
 const SAY = new RegExp('^(say|send|broadcast)($| )', 'i');
 const PAUSE = new RegExp('^(pause|unpause)($| )', 'i');
+const GET = new RegExp('^get($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
 
-let h = 'AHHH';
+let h = '';
 
-function doCommand(command) {
+// setTimeout polyfill
+if (typeof context.setTimeout !== 'function') {
+    context.setTimeout = function (callback, delay) {
+        callback();
+        return -1;
+    }
+}
+
+function doCommand(command): string | null {
     let args: any;
     if ((args = doesCommandMatch(command, [QUIT])) !== false) {
         console.executeLegacy('abort');
@@ -24,6 +33,13 @@ function doCommand(command) {
     }
     else if ((args = doesCommandMatch(command, [SAY])) !== false && typeof args === 'string' && args.length > 0) {
         network.sendMessage(args);
+    }
+    else if ((args = doesCommandMatch(command, [GET])) !== false && typeof args === 'string' && args.length > 0) {
+        let result = context.sharedStorage.get(args);
+        if (typeof result !== 'string') {
+            result = JSON.stringify(result);
+        }
+        return result as string;
     }
     else if ((args = doesCommandMatch(command, [CAPTURE])) !== false) {
         // this will totally crash in headless mode 🙃
@@ -57,8 +73,9 @@ function doCommand(command) {
             options.position = position as CoordsXY;
         }
 
-        context.captureImage(options)
+        context.captureImage(options);
     }
+    return null;
 }
 
 function getCommand(str): boolean | string {
@@ -111,7 +128,10 @@ function main() {
             let msg = e.message;
             let command = getCommand(msg);
             if (command !== false && isPlayerAdmin(getPlayer(e.player))) {
-                doCommand(command);
+                let result = doCommand(command);
+                if (result !== null) {
+                    context.setTimeout(() => network.sendMessage(result, [e.player]), 1000);
+                }
             }
         });
 
@@ -123,7 +143,10 @@ function main() {
 
         server.on('connection', (socket) => {
             socket.on('data', (data) => {
-                doCommand(data);
+                let result = doCommand(data);
+                if (result !== null) {
+                    socket.write(result);
+                }
             });
         });
 
