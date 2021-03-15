@@ -40,13 +40,13 @@ declare global {
     /**
      * APIs for creating and editing title sequences.
      * These will only be available to clients that are not running headless mode.
-    */
+     */
     var titleSequenceManager: TitleSequenceManager;
     /**
      * APIs for controlling the user interface.
      * These will only be available to servers and clients that are not running headless mode.
      * Plugin writers should check if ui is available using `typeof ui !== 'undefined'`.
-    */
+     */
     var ui: Ui;
 
     /**
@@ -68,6 +68,14 @@ declare global {
     interface ScreenCoordsXY {
         x: number;
         y: number;
+    }
+
+    /**
+     * Represents the width and height in pixels.
+     */
+    interface ScreenSize {
+        width: number;
+        height: number;
     }
 
     /**
@@ -104,6 +112,14 @@ declare global {
     interface MapRange {
         leftTop: CoordsXY;
         rightBottom: CoordsXY;
+    }
+
+    /**
+     * Represents lateral and vertical g-forces.
+     */
+    interface GForces {
+        lateralG: number;
+        verticalG: number;
     }
 
     /**
@@ -260,7 +276,7 @@ declare global {
         /**
          * Removes the registered interval specified by the numeric handle. The handles
          * are shared with `setTimeout`.
-         * @param handle 
+         * @param handle
          */
         clearInterval(handle: number): void;
 
@@ -314,6 +330,11 @@ declare global {
          * Rotation of the camera from 0 to 3.
          */
         rotation: number;
+
+        /**
+         * Whether to enable transparency in the screenshot.
+         */
+        transparent?: boolean;
     }
 
     type ObjectType =
@@ -542,6 +563,10 @@ declare global {
 
     type Direction = 0 | 1 | 2 | 3;
 
+    type TileElement =
+        SurfaceElement | FootpathElement | TrackElement | SmallSceneryElement | WallElement | EntranceElement
+        | LargeSceneryElement | BannerElement | CorruptElement;
+
     interface BaseTileElement {
         type: TileElementType;
         baseHeight: number;
@@ -554,6 +579,8 @@ declare global {
     }
 
     interface SurfaceElement extends BaseTileElement {
+        type: "surface";
+
         slope: number;
         surfaceStyle: number;
         edgeStyle: number;
@@ -567,6 +594,8 @@ declare global {
     }
 
     interface FootpathElement extends BaseTileElement {
+        type: "footpath";
+
         object: number;
 
         edges: number;
@@ -587,6 +616,8 @@ declare global {
     }
 
     interface TrackElement extends BaseTileElement {
+        type: "track";
+
         direction: Direction;
         trackType: number;
         sequence: number | null;
@@ -605,6 +636,8 @@ declare global {
     }
 
     interface SmallSceneryElement extends BaseTileElement {
+        type: "small_scenery";
+
         direction: Direction;
         object: number;
         primaryColour: number;
@@ -614,6 +647,8 @@ declare global {
     }
 
     interface WallElement extends BaseTileElement {
+        type: "wall";
+
         direction: Direction;
         object: number;
         primaryColour: number;
@@ -624,6 +659,8 @@ declare global {
     }
 
     interface EntranceElement extends BaseTileElement {
+        type: "entrance";
+
         direction: Direction;
         object: number;
         ride: number;
@@ -633,6 +670,8 @@ declare global {
     }
 
     interface LargeSceneryElement extends BaseTileElement {
+        type: "large_scenery";
+
         direction: Direction;
         object: number;
         primaryColour: number;
@@ -642,11 +681,13 @@ declare global {
     }
 
     interface BannerElement extends BaseTileElement {
+        type: "banner";
         direction: Direction;
         bannerIndex: number;
     }
 
     interface CorruptElement extends BaseTileElement {
+        type: "openrct2_corrupt_deprecated";
     }
 
     /**
@@ -659,7 +700,7 @@ declare global {
         /** The y position in tiles. */
         readonly y: number;
         /** Gets an array of all the tile elements on this tile. */
-        readonly elements: BaseTileElement[];
+        readonly elements: TileElement[];
         /** Gets the number of tile elements on this tile. */
         readonly numElements: number;
         /**
@@ -670,11 +711,11 @@ declare global {
         data: Uint8Array;
 
         /** Gets the tile element at the given index on this tile. */
-        getElement(index: number): BaseTileElement;
+        getElement(index: number): TileElement;
         /** Gets the tile element at the given index on this tile. */
-        getElement<T extends BaseTileElement>(index: number): T;
+        getElement<T extends TileElement>(index: number): T;
         /** Inserts a new tile element at the given index on this tile. */
-        insertElement(index: number): BaseTileElement;
+        insertElement(index: number): TileElement;
         /** Removes the tile element at the given index from this tile. */
         removeElement(index: number): void;
     }
@@ -1136,6 +1177,16 @@ declare global {
         status: VehicleStatus;
 
         /**
+         * The location and direction of where the car is on the track.
+         */
+        trackLocation: CoordsXYZD;
+
+        /**
+         * The current g-forces of this car.
+         */
+        readonly gForces: GForces;
+
+        /**
          * The progress on the current track piece, in steps.
          */
         readonly trackProgress: number;
@@ -1148,11 +1199,11 @@ declare global {
         /**
          * List of peep IDs ordered by seat.
          */
-        peeps: (number | null)[];
+        peeps: Array<number | null>;
 
         /**
-         * Moves the vehicle forward or backwards along the track, relative to its current 
-         * position. A single visible step is about 8.000 to 14.000 in distance depending 
+         * Moves the vehicle forward or backwards along the track, relative to its current
+         * position. A single visible step is about 8.000 to 14.000 in distance depending
          * on the direction its moving in.
          */
         travelBy(distance: number): void;
@@ -1392,6 +1443,7 @@ declare global {
         readonly players: Player[];
         readonly currentPlayer: Player;
         defaultGroup: number;
+        readonly stats: NetworkStats;
 
         getServerInfo(): ServerInfo;
         addGroup(): void;
@@ -1435,6 +1487,11 @@ declare global {
         readonly providerName: string;
         readonly providerEmail: string;
         readonly providerWebsite: string;
+    }
+
+    interface NetworkStats {
+        bytesReceived: number[];
+        bytesSent: number[];
     }
 
     type PermissionType =
@@ -1792,6 +1849,8 @@ declare global {
         activateTool(tool: ToolDesc): void;
 
         registerMenuItem(text: string, callback: () => void): void;
+
+        registerShortcut(desc: ShortcutDesc): void;
     }
 
     /**
@@ -1832,12 +1891,12 @@ declare global {
          * Whether to browse a file for loading or saving. Saving will prompt the user
          * before overwriting a file.
          */
-        type: 'load';
+        type: "load";
 
         /**
          * The type of file to browse for.
          */
-        fileType: 'game' | 'heightmap';
+        fileType: "game" | "heightmap";
 
         /**
          * The pre-selected file to load by default if the user clicks OK.
@@ -1865,8 +1924,8 @@ declare global {
      */
     interface ScenarioFile {
         id: number;
-        category: 'beginner' | 'challenging' | 'expert' | 'real' | 'other' | 'dlc' | 'build_your_own';
-        sourceGame: 'rct1' | 'rct1_aa' | 'rct1_ll' | 'rct2' | 'rct2_ww' | 'rct2_tt' | 'real' | 'other';
+        category: "beginner" | "challenging" | "expert" | "real" | "other" | "dlc" | "build_your_own";
+        sourceGame: "rct1" | "rct1_aa" | "rct1_ll" | "rct2" | "rct2_ww" | "rct2_tt" | "real" | "other";
         path: string;
         internalName: string;
         name: string;
@@ -1874,7 +1933,7 @@ declare global {
         highscore: {
             name: string;
             companyValue: number;
-        }
+        };
     }
 
     interface TileSelection {
@@ -1960,18 +2019,45 @@ declare global {
         "label" |
         "banner";
 
+    interface ShortcutDesc {
+        /**
+         * The unique identifier for the shortcut.
+         * If the identifier already exists, the shortcut will not be registered.
+         * Use full stops to group shortcuts together, e.g. `yourplugin.somewindow.apply`.
+         */
+        id: string;
+
+        /**
+         * The display text for the shortcut.
+         */
+        text: string;
+
+        /**
+         * Default bindings for the shortcut.
+         * E.g. `["CTRL+SHIFT+L", "MOUSE 3"]`
+         */
+        bindings?: string[];
+
+        /**
+         * Function to call when the shortcut is invoked.
+         */
+        callback: () => void;
+    }
+
     /**
      * Represents the type of a widget, e.g. button or label.
      */
     type WidgetType =
-        "button" | "checkbox" | "colourpicker" | "dropdown" | "groupbox" |
+        "button" | "checkbox" | "colourpicker" | "custom" | "dropdown" | "groupbox" |
         "label" | "listview" | "spinner" | "textbox" | "viewport";
 
     type Widget =
-        ButtonWidget | CheckboxWidget | ColourPickerWidget | DropdownWidget | GroupBoxWidget |
+        ButtonWidget | CheckboxWidget | ColourPickerWidget | CustomWidget | DropdownWidget | GroupBoxWidget |
         LabelWidget | ListView | SpinnerWidget | TextBoxWidget | ViewportWidget;
 
     interface WidgetBase {
+        readonly window?: Window;
+        type: WidgetType;
         x: number;
         y: number;
         width: number;
@@ -1983,7 +2069,7 @@ declare global {
     }
 
     interface ButtonWidget extends WidgetBase {
-        type: 'button';
+        type: "button";
         /**
          * Whether the button has a 3D border.
          * By default, text buttons have borders and image buttons do not but it can be overridden.
@@ -1996,31 +2082,36 @@ declare global {
     }
 
     interface CheckboxWidget extends WidgetBase {
-        type: 'checkbox';
+        type: "checkbox";
         text?: string;
         isChecked?: boolean;
         onChange?: (isChecked: boolean) => void;
     }
 
     interface ColourPickerWidget extends WidgetBase {
-        type: 'colourpicker';
+        type: "colourpicker";
         colour?: number;
         onChange?: (colour: number) => void;
     }
 
+    interface CustomWidget extends WidgetBase {
+        type: "custom";
+        onDraw?: (this: CustomWidget, g: GraphicsContext) => void;
+    }
+
     interface DropdownWidget extends WidgetBase {
-        type: 'dropdown';
+        type: "dropdown";
         items?: string[];
         selectedIndex?: number;
         onChange?: (index: number) => void;
     }
 
     interface GroupBoxWidget extends WidgetBase {
-        type: 'groupbox';
+        type: "groupbox";
     }
 
     interface LabelWidget extends WidgetBase {
-        type: 'label';
+        type: "label";
         text?: string;
         textAlign?: TextAlignment;
         onChange?: (index: number) => void;
@@ -2044,7 +2135,7 @@ declare global {
     }
 
     interface ListViewItemSeperator {
-        type: 'seperator';
+        type: "seperator";
         text?: string;
     }
 
@@ -2056,7 +2147,7 @@ declare global {
     }
 
     interface ListView extends WidgetBase {
-        type: 'listview';
+        type: "listview";
         scrollbars?: ScrollbarType;
         isStriped?: boolean;
         showColumnHeaders?: boolean;
@@ -2071,22 +2162,24 @@ declare global {
     }
 
     interface SpinnerWidget extends WidgetBase {
-        type: 'spinner';
+        type: "spinner";
         text?: string;
+
         onDecrement?: () => void;
         onIncrement?: () => void;
+        onClick?: () => void;
     }
 
     interface TextBoxWidget extends WidgetBase {
-        type: 'textbox';
+        type: "textbox";
         text?: string;
         maxLength?: number;
         onChange?: (text: string) => void;
     }
 
     interface ViewportWidget extends WidgetBase {
-        type: 'viewport';
-        viewport?: Viewport
+        type: "viewport";
+        viewport?: Viewport;
     }
 
     interface Window {
@@ -2160,6 +2253,44 @@ declare global {
     }
 
     /**
+     * API for drawing graphics.
+     */
+    interface GraphicsContext {
+        colour: number | undefined;
+        secondaryColour: number | undefined;
+        ternaryColour: number | undefined;
+        stroke: number;
+        fill: number;
+        paletteId: number | undefined;
+        readonly width: number;
+        readonly height: number;
+
+        getImage(id: number): ImageInfo | undefined;
+        measureText(text: string): ScreenSize;
+
+        clear(): void;
+        clip(x: number, y: number, width: number, height: number): void;
+        box(x: number, y: number, width: number, height: number): void;
+        image(id: number, x: number, y: number): void;
+        line(x1: number, y1: number, x2: number, y2: number): void;
+        rect(x: number, y: number, width: number, height: number): void;
+        text(text: string, x: number, y: number): void;
+        well(x: number, y: number, width: number, height: number): void;
+    }
+
+    interface ImageInfo {
+        readonly id: number;
+        readonly offset: ScreenCoordsXY;
+        readonly width: number;
+        readonly height: number;
+        readonly isBMP: boolean;
+        readonly isRLE: boolean;
+        readonly isPalette: boolean;
+        readonly noZoom: boolean;
+        readonly nextZoomId: number | undefined;
+    }
+
+    /**
      * Listens for incoming connections.
      * Based on node.js net.Server, see https://nodejs.org/api/net.html for more information.
      */
@@ -2169,9 +2300,9 @@ declare global {
         listen(port: number, host?: string): Listener;
         close(): Listener;
 
-        on(event: 'connection', callback: (socket: Socket) => void): Listener;
+        on(event: "connection", callback: (socket: Socket) => void): Listener;
 
-        off(event: 'connection', callback: (socket: Socket) => void): Listener;
+        off(event: "connection", callback: (socket: Socket) => void): Listener;
     }
 
     /**
@@ -2185,13 +2316,13 @@ declare global {
         end(data?: string): Socket;
         write(data: string): boolean;
 
-        on(event: 'close', callback: (hadError: boolean) => void): Socket;
-        on(event: 'error', callback: (hadError: boolean) => void): Socket;
-        on(event: 'data', callback: (data: string) => void): Socket;
+        on(event: "close", callback: (hadError: boolean) => void): Socket;
+        on(event: "error", callback: (hadError: boolean) => void): Socket;
+        on(event: "data", callback: (data: string) => void): Socket;
 
-        off(event: 'close', callback: (hadError: boolean) => void): Socket;
-        off(event: 'error', callback: (hadError: boolean) => void): Socket;
-        off(event: 'data', callback: (data: string) => void): Socket;
+        off(event: "close", callback: (hadError: boolean) => void): Socket;
+        off(event: "error", callback: (hadError: boolean) => void): Socket;
+        off(event: "data", callback: (data: string) => void): Socket;
     }
 
     interface TitleSequence {
@@ -2283,64 +2414,64 @@ declare global {
     }
 
     type TitleSequenceCommandType =
-        'load' |
-        'loadsc' |
-        'location' |
-        'rotate' |
-        'zoom' |
-        'speed' |
-        'follow' |
-        'wait' |
-        'restart' |
-        'end';
+        "load" |
+        "loadsc" |
+        "location" |
+        "rotate" |
+        "zoom" |
+        "speed" |
+        "follow" |
+        "wait" |
+        "restart" |
+        "end";
 
     interface LoadTitleSequenceCommand {
-        type: 'load';
+        type: "load";
         index: number;
     }
 
     interface LocationTitleSequenceCommand {
-        type: 'location';
+        type: "location";
         x: number;
         y: number;
     }
 
     interface RotateTitleSequenceCommand {
-        type: 'rotate';
+        type: "rotate";
         rotations: number;
     }
 
     interface ZoomTitleSequenceCommand {
-        type: 'zoom';
+        type: "zoom";
         zoom: number;
     }
 
     interface FollowTitleSequenceCommand {
-        type: 'follow';
+        type: "follow";
         id: number | null;
     }
 
     interface SpeedTitleSequenceCommand {
-        type: 'speed';
+        type: "speed";
         speed: number;
     }
 
     interface WaitTitleSequenceCommand {
-        type: 'wait';
+        type: "wait";
         duration: number;
     }
 
     interface LoadScenarioTitleSequenceCommand {
-        type: 'loadsc';
+        type: "loadsc";
         scenario: string;
     }
 
     interface RestartTitleSequenceCommand {
-        type: 'restart';
+        type: "restart";
     }
 
     interface EndTitleSequenceCommand {
-        type: 'end';
+        type: "end";
     }
 
     type TitleSequenceCommand =

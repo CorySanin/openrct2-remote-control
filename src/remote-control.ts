@@ -26,20 +26,13 @@ function doCommand(command): string | null {
         console.executeLegacy('abort');
     }
     else if ((args = doesCommandMatch(command, [SAVE])) !== false) {
-        console.executeLegacy(`save_park ${args}`);
+        console.executeLegacy(`save_park ${args}`.trim());
     }
     else if ((args = doesCommandMatch(command, [PAUSE])) !== false) {
         context.executeAction('pausetoggle', {}, doNothing);
     }
     else if ((args = doesCommandMatch(command, [SAY])) !== false && typeof args === 'string' && args.length > 0) {
         network.sendMessage(args);
-    }
-    else if ((args = doesCommandMatch(command, [GET])) !== false && typeof args === 'string' && args.length > 0) {
-        let result = context.sharedStorage.get(args);
-        if (typeof result !== 'string') {
-            result = JSON.stringify(result);
-        }
-        return result as string;
     }
     else if ((args = doesCommandMatch(command, [CAPTURE])) !== false) {
         // this will totally crash in headless mode 🙃
@@ -74,6 +67,20 @@ function doCommand(command): string | null {
         }
 
         context.captureImage(options);
+    }
+    return null;
+}
+
+function doNetworkCommand(command): object | null {
+    let args: any;
+    if ((args = doesCommandMatch(command, [GET])) !== false && typeof args === 'string' && args.length > 0) {
+        let result = context.sharedStorage.get(args, null);
+        if (typeof result === 'string') {
+            result = {
+                result
+            };
+        }
+        return result;
     }
     return null;
 }
@@ -122,7 +129,7 @@ function getPlayer(playerID: number): Player {
 }
 
 function main() {
-    let onlineOnly = context.sharedStorage.get('control.onlineonly', true);
+    let onlineOnly = context.sharedStorage.get('remote-control.onlineonly', true);
     if (!onlineOnly || network.mode === 'server') {
         context.subscribe('network.chat', (e) => {
             let msg = e.message;
@@ -136,17 +143,23 @@ function main() {
         });
 
         let server = network.createListener();
-        let port = context.sharedStorage.get('control.port', 35711);
-        let host = context.sharedStorage.get('control.host', '127.0.0.1');
+        let port = context.sharedStorage.get('remote-control.port', 35711);
+        let host = context.sharedStorage.get('remote-control.host', '127.0.0.1');
 
         h = host;
 
         server.on('connection', (socket) => {
             socket.on('data', (data) => {
-                let result = doCommand(data);
+                let result : string | object = doCommand(data);
                 if (result !== null) {
-                    socket.write(result);
+                    result = {
+                        result
+                    };
                 }
+                else{
+                    result = doNetworkCommand(data);
+                }
+                socket.write(JSON.stringify(result));
             });
         });
 
