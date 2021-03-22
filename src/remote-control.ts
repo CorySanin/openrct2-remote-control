@@ -7,6 +7,7 @@ const SAVE = new RegExp('^save($| )', 'i');
 const SAY = new RegExp('^(say|send|broadcast)($| )', 'i');
 const PAUSE = new RegExp('^(pause|unpause)($| )', 'i');
 const GET = new RegExp('^get($| )', 'i');
+const CHEAT = new RegExp('(^| )cheat($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
 
@@ -33,6 +34,9 @@ function doCommand(command): string | null {
     }
     else if ((args = doesCommandMatch(command, [SAY])) !== false && typeof args === 'string' && args.length > 0) {
         network.sendMessage(args);
+    }
+    else if ((args = doesCommandMatch(command, [CHEAT])) !== false && typeof args === 'string' && args.length > 0) {
+        setCheatAction.apply(this, args.split(' '));
     }
     else if ((args = doesCommandMatch(command, [CAPTURE])) !== false) {
         // this will totally crash in headless mode 🙃
@@ -126,6 +130,14 @@ function getPlayer(playerID: number): Player {
         }
     }
     return player;
+}
+
+function setCheatAction(type: number, param1: number = 1, param2: number = 0): void {
+    context.executeAction('setcheataction', {
+        type,
+        param1,
+        param2
+    }, doNothing);
 }
 
 function main() {
