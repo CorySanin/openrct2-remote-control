@@ -8,6 +8,7 @@ const SAY = new RegExp('^(say|send|broadcast)($| )', 'i');
 const PAUSE = new RegExp('^(pause|unpause)($| )', 'i');
 const GET = new RegExp('^get($| )', 'i');
 const PARKINFO = new RegExp('(park|parkinfo|park-info)($| )', 'i');
+const PARKMESSAGES = new RegExp('(messages|parkmessages|park-messages)($| )', 'i');
 const CHEAT = new RegExp('(^| )cheat($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
@@ -89,15 +90,34 @@ function doNetworkCommand(command): object | null {
     }
     else if ((args = doesCommandMatch(command, [PARKINFO])) !== false) {
         return {
-            park,
+            park: {
+                cash: park.cash,
+                companyValue: park.companyValue,
+                guests: park.guests,
+                name: park.name,
+                parkSize: park.parkSize,
+                rating: park.rating,
+                totalAdmissions: park.totalAdmissions,
+                value: park.value
+            },
             network: {
                 players: network.players.map(p => ({
-                        id: p.id,
-                        name: p.name,
-                        ping: p.ping
-                    })),
-                serverInfo: network.getServerInfo()
+                    id: p.id,
+                    name: p.name,
+                    ping: p.ping
+                }))
             }
+        }
+    }
+    else if ((args = doesCommandMatch(command, [PARKMESSAGES])) !== false) {
+        return {
+            messages: park.messages.map(m => ({
+                month: m.month,
+                day: m.day,
+                type: m.type,
+                text: m.text,
+                subject: (m.subject)? m.subject : null
+            }))
         }
     }
     return null;
