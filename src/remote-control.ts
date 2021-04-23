@@ -7,6 +7,7 @@ const SAVE = new RegExp('^save($| )', 'i');
 const SAY = new RegExp('^(say|send|broadcast)($| )', 'i');
 const PAUSE = new RegExp('^(pause|unpause)($| )', 'i');
 const GET = new RegExp('^get($| )', 'i');
+const PARKINFO = new RegExp('(park|parkinfo|park-info)($| )', 'i');
 const CHEAT = new RegExp('(^| )cheat($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
@@ -86,6 +87,19 @@ function doNetworkCommand(command): object | null {
         }
         return result;
     }
+    else if ((args = doesCommandMatch(command, [PARKINFO])) !== false) {
+        return {
+            park,
+            network: {
+                players: network.players.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        ping: p.ping
+                    })),
+                serverInfo: network.getServerInfo()
+            }
+        }
+    }
     return null;
 }
 
@@ -162,13 +176,13 @@ function main() {
 
         server.on('connection', (socket) => {
             socket.on('data', (data) => {
-                let result : string | object = doCommand(data);
+                let result: string | object = doCommand(data);
                 if (result !== null) {
                     result = {
                         result
                     };
                 }
-                else{
+                else {
                     result = doNetworkCommand(data);
                 }
                 socket.write(JSON.stringify(result));

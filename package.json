@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/CorySanin/openrct2-remote-control/issues"
   },
-  "homepage": "https://github.com/CorySanin/openrct2-remote-control#readme"
+  "homepage": "https://github.com/CorySanin/openrct2-remote-control#readme",
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  }
 }
