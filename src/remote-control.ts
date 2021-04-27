@@ -103,8 +103,15 @@ function doNetworkCommand(command): object | null {
             network: {
                 players: network.players.map(p => ({
                     id: p.id,
+                    group: p.group,
                     name: p.name,
-                    ping: p.ping
+                    ping: p.ping,
+                    hash: p.publicKeyHash,
+                    ip: p.ipAddress
+                })),
+                groups: network.groups.map(g => ({
+                    id: g.id,
+                    name: g.name
                 }))
             }
         }
@@ -116,7 +123,7 @@ function doNetworkCommand(command): object | null {
                 day: m.day,
                 type: m.type,
                 text: m.text,
-                subject: (m.subject)? m.subject : null
+                subject: (m.subject) ? m.subject : null
             }))
         }
     }
