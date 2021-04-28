@@ -116,6 +116,31 @@ function doNetworkCommand(command): object | null {
             }
         }
     }
+    else if ((args = doesCommandMatch(command, ['update'])) !== false) {
+        let sub = args
+        if ((args = doesCommandMatch(sub, ['player'])) !== false) {
+            args = args.split(' ', 2);
+            let player = getPlayerByHash(args[0]);
+            let result = {
+                result: player !== null
+            }
+            if (result.result) {
+                args = args[1];
+                player.group = parseInt(args);
+            }
+            return result;
+        }
+    }
+    else if ((args = doesCommandMatch(command, ['kick'])) !== false) {
+        let playerind = getPlayerIndexByHash(args);
+        let result = {
+            result: playerind >= 0
+        }
+        if (result.result) {
+            network.kickPlayer(playerind);
+        }
+        return result;
+    }
     else if ((args = doesCommandMatch(command, [PARKMESSAGES])) !== false) {
         return {
             messages: park.messages.map(m => ({
@@ -152,6 +177,27 @@ function doesCommandMatch(str, commands): boolean | string {
         }
     }
     return false;
+}
+
+function getPlayerByHash(hash: string): Player {
+    let player = null;
+    network.players.every(p => {
+        if (p.publicKeyHash === hash) {
+            player = p;
+            return false;
+        }
+        return true;
+    });
+    return player;
+}
+
+function getPlayerIndexByHash(hash: string): number {
+    for(let i = 0; i < network.players.length; i++){
+        if(hash === network.players[i].publicKeyHash){
+            return i;
+        }
+    }
+    return -1;
 }
 
 function isPlayerAdmin(player: Player) {
