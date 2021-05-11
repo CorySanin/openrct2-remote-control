@@ -23,7 +23,7 @@ if (typeof context.setTimeout !== 'function') {
     }
 }
 
-function doCommand(command): string | null {
+function doCommand(command): string | boolean {
     let args: any;
     if ((args = doesCommandMatch(command, [QUIT])) !== false) {
         console.executeLegacy('abort');
@@ -74,7 +74,10 @@ function doCommand(command): string | null {
 
         context.captureImage(options);
     }
-    return null;
+    else{
+        return false;
+    }
+    return true;
 }
 
 function doNetworkCommand(command): object | null {
@@ -235,8 +238,8 @@ function main() {
             let command = getCommand(msg);
             if (command !== false && isPlayerAdmin(getPlayer(e.player))) {
                 let result = doCommand(command);
-                if (result !== null) {
-                    context.setTimeout(() => network.sendMessage(result, [e.player]), 1000);
+                if (typeof result === 'string') {
+                    context.setTimeout(() => network.sendMessage(result as string, [e.player]), 1000);
                 }
             }
         });
@@ -249,8 +252,8 @@ function main() {
 
         server.on('connection', (socket) => {
             socket.on('data', (data) => {
-                let result: string | object = doCommand(data);
-                if (result !== null) {
+                let result: string | object | boolean = doCommand(data);
+                if (result !== false) {
                     result = {
                         result
                     };

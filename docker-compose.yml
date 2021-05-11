@@ -14,4 +14,4 @@ services:
          - ./config/openrct2/config.ini:/home/openrct2/.config/OpenRCT2/config.ini
       command:
          - "host"
-         - "https://taunt.bot/rct/scenarios/"
+         - "https://ffa-tycoon.com/parks/sandbox"
