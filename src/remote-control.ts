@@ -29,7 +29,14 @@ function doCommand(command): string | boolean {
         console.executeLegacy('abort');
     }
     else if ((args = doesCommandMatch(command, [SAVE])) !== false) {
-        console.executeLegacy(`save_park ${args}`.trim());
+        context.executeAction('setcheataction',
+            {
+                type: 35,
+                param1: 0,
+                param2: 0,
+                flags: 0
+            });
+        context.setTimeout(() => console.executeLegacy(`save_park ${args}`.trim()), 500);
     }
     else if ((args = doesCommandMatch(command, [PAUSE])) !== false) {
         context.executeAction('pausetoggle', {}, doNothing);
@@ -74,7 +81,7 @@ function doCommand(command): string | boolean {
 
         context.captureImage(options);
     }
-    else{
+    else {
         return false;
     }
     return true;
@@ -195,8 +202,8 @@ function getPlayerByHash(hash: string): Player {
 }
 
 function getPlayerIndexByHash(hash: string): number {
-    for(let i = 0; i < network.players.length; i++){
-        if(hash === network.players[i].publicKeyHash){
+    for (let i = 0; i < network.players.length; i++) {
+        if (hash === network.players[i].publicKeyHash) {
             return i;
         }
     }
@@ -275,7 +282,7 @@ function doNothing() {
 
 registerPlugin({
     name: 'control',
-    version: '1.0.0',
+    version: '1.0.1',
     authors: ['Cory Sanin'],
     type: 'remote',
     licence: 'MIT',
