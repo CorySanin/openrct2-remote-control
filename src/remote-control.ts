@@ -12,6 +12,7 @@ const PARKMESSAGES = new RegExp('(messages|parkmessages|park-messages)($| )', 'i
 const CHEAT = new RegExp('(^| )cheat($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
+const SETCHEAT = (context.apiVersion > 65) ? 'setcheat' : 'setcheataction';
 
 let h = '';
 
@@ -29,7 +30,7 @@ function doCommand(command): string | boolean {
         console.executeLegacy('abort');
     }
     else if ((args = doesCommandMatch(command, [SAVE])) !== false) {
-        context.executeAction('setcheataction',
+        context.executeAction(SETCHEAT,
             {
                 type: 35,
                 param1: 0,
@@ -39,7 +40,7 @@ function doCommand(command): string | boolean {
         context.setTimeout(() => console.executeLegacy(`save_park ${args}`.trim()), 500);
     }
     else if ((args = doesCommandMatch(command, [PAUSE])) !== false) {
-        context.executeAction('pausetoggle', {}, doNothing);
+        context.executeAction('pausetoggle', {});
     }
     else if ((args = doesCommandMatch(command, [SAY])) !== false && typeof args === 'string' && args.length > 0) {
         network.sendMessage(args);
@@ -87,7 +88,7 @@ function doCommand(command): string | boolean {
     return true;
 }
 
-function doNetworkCommand(command): object | null {
+function doNetworkCommand(command: string): object | null {
     let args: any;
     if ((args = doesCommandMatch(command, [GET])) !== false && typeof args === 'string' && args.length > 0) {
         let result = context.sharedStorage.get(args, null);
@@ -165,16 +166,17 @@ function doNetworkCommand(command): object | null {
     return null;
 }
 
-function getCommand(str): boolean | string {
+function getCommand(str: string): boolean | string {
     if (str.match(PREFIX)) {
         return str.replace(PREFIX, '').trim();
     }
     return false;
 }
 
-function doesCommandMatch(str, commands): boolean | string {
+function doesCommandMatch(str: string, commands: any[]): boolean | string {
     for (const command of commands) {
         if (typeof command === 'string') {
+            // @ts-ignore
             if (str.startsWith(command)) {
                 let ret = str.substring(command.length, str.length).trim();
                 return (ret) ? ret : true;
@@ -230,11 +232,11 @@ function getPlayer(playerID: number): Player {
 }
 
 function setCheatAction(type: number, param1: number = 1, param2: number = 0): void {
-    context.executeAction('setcheataction', {
+    context.executeAction(SETCHEAT, {
         type,
         param1,
         param2
-    }, doNothing);
+    });
 }
 
 function main() {
@@ -276,15 +278,13 @@ function main() {
     }
 }
 
-function doNothing() {
-    //Done!
-}
-
 registerPlugin({
     name: 'control',
-    version: '1.0.1',
+    version: '1.0.2',
     authors: ['Cory Sanin'],
     type: 'remote',
+    minApiVersion: 19,
+    targetApiVersion: 65,
     licence: 'MIT',
     main
 });
