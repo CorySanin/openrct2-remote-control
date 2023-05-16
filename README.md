@@ -9,6 +9,7 @@ If initiating these over in-game chat, the command must be proceeded by a `!` or
 - **quit** - Aborts the server process immediately
 - **save** \[filename] - Saves the park. An optional filename can be specified.
 - **pause** - Pauses/unpauses the game
+- **hire** \[staffType] \[quantity] - Hires a staff member. A staff type and the number to hire can be provided. Defaults to `handyman` and `1` respectively.
 - **capture** \[param: value ...] - Takes a screenshot and saves it to the screenshot directory. The following otional parameters can be provided: filename, width, height, x, y, zoom, rotation. For a full-park screenshot, only pass in values for zoom and rotation. *Does not work on a headless server.*
 
 ## Docker Setup
