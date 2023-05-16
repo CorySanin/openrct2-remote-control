@@ -7,12 +7,17 @@ const SAVE = new RegExp('^save($| )', 'i');
 const SAY = new RegExp('^(say|send|broadcast)($| )', 'i');
 const PAUSE = new RegExp('^(pause|unpause)($| )', 'i');
 const GET = new RegExp('^get($| )', 'i');
+const HIRE = new RegExp('^hire($| )', 'i');
 const PARKINFO = new RegExp('(park|parkinfo|park-info)($| )', 'i');
 const PARKMESSAGES = new RegExp('(messages|parkmessages|park-messages)($| )', 'i');
 const CHEAT = new RegExp('(^| )cheat($| )', 'i');
 const CAPTURE = new RegExp('^(capture|screenshot)($| )', 'i');
 const CAPTUREPARAMS = new RegExp('([a-z]+): ?([^\s,]+)', 'g');
-const SETCHEAT = (context.apiVersion > 65) ? 'setcheat' : 'setcheataction';
+const MECHANIC = new RegExp('^mech(anic)?$', 'i');
+const SECURITY = new RegExp('^(security|guard|security[\\s-_.]{0,1}guard)$', 'i');
+const ENTERTAINER = new RegExp('^entertain(er)?$', 'i');
+// action was renamed in API version 66 by #18826 and again in API version 74 by #19987
+const SETCHEAT = (context.apiVersion > 65) ? ((context.apiVersion >= 74) ? 'cheatset' : 'setcheat') : 'setcheataction';
 
 let h = '';
 
@@ -44,6 +49,44 @@ function doCommand(command): string | boolean {
     }
     else if ((args = doesCommandMatch(command, [SAY])) !== false && typeof args === 'string' && args.length > 0) {
         network.sendMessage(args);
+    }
+    else if ((args = doesCommandMatch(command, [HIRE])) !== false) {
+        let staffType = 0;
+        let quantity = 1;
+        let staffOrders = 7;
+        if (typeof args === 'string' && args.length > 0) {
+            args = args.split(' ');
+            if (args[0].match(MECHANIC)) {
+                staffType = 1;
+                staffOrders = 3;
+            }
+            else if (args[0].match(SECURITY)) {
+                staffType = 2;
+                staffOrders = 0;
+            }
+            else if (args[0].match(ENTERTAINER)) {
+                staffType = 3;
+                staffOrders = 0;
+            }
+
+            if (args.length > 1) {
+                const parsed = parseInt(args[1]);
+                if (parsed) {
+                    quantity = parsed;
+                }
+            }
+        }
+
+        let staffHireArgs: StaffHireArgs = {
+            autoPosition: true,
+            staffType,
+            entertainerType: 0,
+            staffOrders
+        };
+
+        for(let i = 0; i < quantity; i++) {
+            context.executeAction("staffhire", staffHireArgs);
+        }
     }
     else if ((args = doesCommandMatch(command, [CHEAT])) !== false && typeof args === 'string' && args.length > 0) {
         setCheatAction.apply(this, args.split(' '));
@@ -218,17 +261,10 @@ function isPlayerAdmin(player: Player) {
 }
 
 function getPlayer(playerID: number): Player {
-    if (playerID === -1) {
+    if (playerID < 0) {
         return null;
     }
-    var player: Player = null; //network.getPlayer(playerID);
-    var players = network.players;
-    for (const p of players) {
-        if (p.id === playerID) {
-            player = p;
-        }
-    }
-    return player;
+    return network.getPlayer(playerID);
 }
 
 function setCheatAction(type: number, param1: number = 1, param2: number = 0): void {
@@ -280,7 +316,7 @@ function main() {
 
 registerPlugin({
     name: 'control',
-    version: '1.0.2',
+    version: '1.1.0',
     authors: ['Cory Sanin'],
     type: 'remote',
     minApiVersion: 19,
