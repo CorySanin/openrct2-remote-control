@@ -4,7 +4,8 @@ Execute server operations by using commands in chat or over a TCP connection.
 
 ## Commands
 
-If initiating these over in-game chat, the command must be proceeded by a `!` or a `/`. The player must also have the `kick_player` permission.
+If initiating these over in-game chat, the command must be proceeded by a `!` or a `/`. The player must also have the `modify_groups` permission.
+A different permission can be used by setting `remote-control.adminperm` in the `plugin.store.json` file. See `type PermissionType` in [openrct2.d.ts](types/openrct2.d.ts).
 
 - **quit** - Aborts the server process immediately
 - **save** \[filename] - Saves the park. An optional filename can be specified.

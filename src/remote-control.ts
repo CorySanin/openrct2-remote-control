@@ -29,7 +29,7 @@ if (typeof context.setTimeout !== 'function') {
     }
 }
 
-function doCommand(command): string | boolean {
+function doCommand(command: string): string | boolean {
     let args: any;
     if ((args = doesCommandMatch(command, [QUIT])) !== false) {
         console.executeLegacy('abort');
@@ -84,7 +84,7 @@ function doCommand(command): string | boolean {
             staffOrders
         };
 
-        for(let i = 0; i < quantity; i++) {
+        for (let i = 0; i < quantity; i++) {
             context.executeAction("staffhire", staffHireArgs);
         }
     }
@@ -100,7 +100,7 @@ function doCommand(command): string | boolean {
         };
         let position = {};
 
-        let match;
+        let match: RegExpExecArray;
         while ((match = CAPTUREPARAMS.exec(args)) !== null) {
             let value = null;
             if (match[1] === 'filename') {
@@ -255,9 +255,12 @@ function getPlayerIndexByHash(hash: string): number {
     return -1;
 }
 
-function isPlayerAdmin(player: Player) {
-    var perms: string[] = network.getGroup(player.group).permissions;
-    return perms.indexOf('kick_player') >= 0;
+function isPlayerAdmin(player: Player, perm: PermissionType) {
+    if (player === null) {
+        return false;
+    }
+    var perms: PermissionType[] = network.getGroup(player.group).permissions;
+    return perms.indexOf(perm) >= 0;
 }
 
 function getPlayer(playerID: number): Player {
@@ -278,11 +281,12 @@ function setCheatAction(type: number, param1: number = 1, param2: number = 0): v
 function main() {
     let onlineOnly = context.sharedStorage.get('remote-control.onlineonly', true);
     if (!onlineOnly || network.mode === 'server') {
+        let adminPerm: PermissionType = context.sharedStorage.get('remote-control.adminperm', context.sharedStorage.get('sanin.adminperm', 'modify_groups'));
         context.subscribe('network.chat', (e) => {
             let msg = e.message;
             let command = getCommand(msg);
-            if (command !== false && isPlayerAdmin(getPlayer(e.player))) {
-                let result = doCommand(command);
+            if (command !== false && isPlayerAdmin(getPlayer(e.player), adminPerm)) {
+                let result = doCommand(command as string);
                 if (typeof result === 'string') {
                     context.setTimeout(() => network.sendMessage(result as string, [e.player]), 1000);
                 }
@@ -316,7 +320,7 @@ function main() {
 
 registerPlugin({
     name: 'control',
-    version: '1.1.0',
+    version: '1.1.1',
     authors: ['Cory Sanin'],
     type: 'remote',
     minApiVersion: 19,

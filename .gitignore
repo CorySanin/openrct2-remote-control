@@ -104,4 +104,6 @@ dist
 .tern-port
 
 # Custom
-config/config.json5
+config/openrct2/*
+!config/openrct2/config.ini
+!config/openrct2/plugin.store.json
