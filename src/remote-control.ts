@@ -320,11 +320,11 @@ function main() {
 
 registerPlugin({
     name: 'control',
-    version: '1.1.1',
+    version: '1.1.2',
     authors: ['Cory Sanin'],
     type: 'remote',
     minApiVersion: 19,
-    targetApiVersion: 65,
+    targetApiVersion: 77,
     licence: 'MIT',
     main
 });
