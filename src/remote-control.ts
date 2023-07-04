@@ -89,7 +89,7 @@ function doCommand(command: string): string | boolean {
         }
     }
     else if ((args = doesCommandMatch(command, [CHEAT])) !== false && typeof args === 'string' && args.length > 0) {
-        setCheatAction.apply(this, args.split(' '));
+        setCheatAction.apply(this, args.split(' ').map((s: string) => parseInt(s)));
     }
     else if ((args = doesCommandMatch(command, [CAPTURE])) !== false) {
         // this will totally crash in headless mode 🙃
@@ -270,11 +270,12 @@ function getPlayer(playerID: number): Player {
     return network.getPlayer(playerID);
 }
 
-function setCheatAction(type: number, param1: number = 1, param2: number = 0): void {
+function setCheatAction(type: number, param1: number = 1, param2: number = 0, flags = 0): void {
     context.executeAction(SETCHEAT, {
         type,
         param1,
-        param2
+        param2,
+        flags
     });
 }
 
@@ -320,7 +321,7 @@ function main() {
 
 registerPlugin({
     name: 'control',
-    version: '1.1.2',
+    version: '1.1.3',
     authors: ['Cory Sanin'],
     type: 'remote',
     minApiVersion: 19,
