@@ -186,12 +186,12 @@ function doNetworkCommand(command: string): object | null {
         }
     }
     else if ((args = doesCommandMatch(command, ['kick'])) !== false) {
-        let playerind = getPlayerIndexByHash(args);
+        let player = getPlayerByHash(args);
         let result = {
-            result: playerind >= 0
+            result: player !== null
         }
         if (result.result) {
-            network.kickPlayer(playerind);
+            network.kickPlayer(player.id);
         }
         return result;
     }
@@ -244,15 +244,6 @@ function getPlayerByHash(hash: string): Player {
         return true;
     });
     return player;
-}
-
-function getPlayerIndexByHash(hash: string): number {
-    for (let i = 0; i < network.players.length; i++) {
-        if (hash === network.players[i].publicKeyHash) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 function isPlayerAdmin(player: Player, perm: PermissionType) {
@@ -321,7 +312,7 @@ function main() {
 
 registerPlugin({
     name: 'control',
-    version: '1.1.3',
+    version: '1.1.4',
     authors: ['Cory Sanin'],
     type: 'remote',
     minApiVersion: 19,
