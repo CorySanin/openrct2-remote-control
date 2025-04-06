@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/CorySanin/openrct2-remote-control#readme",
   "devDependencies": {
-    "typescript": "5.1.6"
+    "typescript": "5.8.3"
   }
 }

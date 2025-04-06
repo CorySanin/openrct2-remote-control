@@ -1,4 +1,5 @@
 /// <reference path="../types/openrct2.d.ts" />
+import type { ParkInfo, RemoteParkMessage } from "../types/remote-control-payloads";
 
 const NEWLINE = new RegExp('\n', 'g');
 const PREFIX = new RegExp('^(!|/)');
@@ -23,14 +24,53 @@ let h = '';
 
 // setTimeout polyfill
 if (typeof context.setTimeout !== 'function') {
-    context.setTimeout = function (callback, delay) {
+    context.setTimeout = function (callback, _) {
         callback();
         return -1;
     }
 }
 
+function createParkInfo(): ParkInfo {
+    return {
+        park: {
+            cash: park.cash,
+            companyValue: park.companyValue,
+            guests: park.guests,
+            name: park.name,
+            parkSize: park.parkSize,
+            rating: park.rating,
+            totalAdmissions: park.totalAdmissions,
+            value: park.value
+        },
+        network: {
+            players: network.players.map(p => ({
+                id: p.id,
+                group: p.group,
+                name: p.name,
+                ping: p.ping,
+                hash: p.publicKeyHash,
+                ip: p.ipAddress
+            })),
+            groups: network.groups.map(g => ({
+                id: g.id,
+                name: g.name
+            }))
+        }
+    };
+}
+
+function getParkMessages(): RemoteParkMessage[] {
+    return park.messages.map(m => ({
+        month: m.month,
+        day: m.day,
+        type: m.type,
+        text: m.text,
+        subject: (m.subject) ? m.subject : null
+    }))
+}
+
 function doCommand(command: string): string | boolean {
-    let args: any;
+    let args: boolean | string = false;
     if ((args = doesCommandMatch(command, [QUIT])) !== false) {
         console.executeLegacy('abort');
     }
@@ -55,21 +95,21 @@ function doCommand(command: string): string | boolean {
         let quantity = 1;
         let staffOrders = 7;
         if (typeof args === 'string' && args.length > 0) {
-            args = args.split(' ');
-            if (args[0].match(MECHANIC)) {
+            const argComponents = args.split(' ');
+            if (argComponents[0].match(MECHANIC)) {
                 staffType = 1;
                 staffOrders = 3;
             }
-            else if (args[0].match(SECURITY)) {
+            else if (argComponents[0].match(SECURITY)) {
                 staffType = 2;
                 staffOrders = 0;
             }
-            else if (args[0].match(ENTERTAINER)) {
+            else if (argComponents[0].match(ENTERTAINER)) {
                 staffType = 3;
                 staffOrders = 0;
             }
 
-            if (args.length > 1) {
+            if (argComponents.length > 1) {
                 const parsed = parseInt(args[1]);
                 if (parsed) {
                     quantity = parsed;
@@ -80,7 +120,7 @@ function doCommand(command: string): string | boolean {
         let staffHireArgs: StaffHireArgs = {
             autoPosition: true,
             staffType,
-            entertainerType: 0,
+            costumeIndex: 0,
             staffOrders
         };
 
@@ -101,7 +141,7 @@ function doCommand(command: string): string | boolean {
         let position = {};
 
         let match: RegExpExecArray;
-        while ((match = CAPTUREPARAMS.exec(args)) !== null) {
+        while (typeof args === 'string' && (match = CAPTUREPARAMS.exec(args)) !== null) {
             let value = null;
             if (match[1] === 'filename') {
                 value = match[2];
@@ -132,7 +172,7 @@ function doCommand(command: string): string | boolean {
 }
 
 function doNetworkCommand(command: string): object | null {
-    let args: any;
+    let args: string | boolean = false;
     if ((args = doesCommandMatch(command, [GET])) !== false && typeof args === 'string' && args.length > 0) {
         let result = context.sharedStorage.get(args, null);
         if (typeof result === 'string') {
@@ -143,44 +183,18 @@ function doNetworkCommand(command: string): object | null {
         return result;
     }
     else if ((args = doesCommandMatch(command, [PARKINFO])) !== false) {
-        return {
-            park: {
-                cash: park.cash,
-                companyValue: park.companyValue,
-                guests: park.guests,
-                name: park.name,
-                parkSize: park.parkSize,
-                rating: park.rating,
-                totalAdmissions: park.totalAdmissions,
-                value: park.value
-            },
-            network: {
-                players: network.players.map(p => ({
-                    id: p.id,
-                    group: p.group,
-                    name: p.name,
-                    ping: p.ping,
-                    hash: p.publicKeyHash,
-                    ip: p.ipAddress
-                })),
-                groups: network.groups.map(g => ({
-                    id: g.id,
-                    name: g.name
-                }))
-            }
-        }
+        return createParkInfo();
     }
     else if ((args = doesCommandMatch(command, ['update'])) !== false) {
-        let sub = args
-        if ((args = doesCommandMatch(sub, ['player'])) !== false) {
-            args = args.split(' ', 2);
-            let player = getPlayerByHash(args[0]);
-            let result = {
+        if (typeof args === 'string' && (args = doesCommandMatch(args, ['player'])) !== false) {
+            const argsComponents = typeof args === 'string' ? args.split(' ', 2) : ['', ''];
+            let player = getPlayerByHash(argsComponents[0]);
+            const result = {
                 result: player !== null
             }
             if (result.result) {
-                args = args[1];
-                player.group = parseInt(args);
+                args = argsComponents[1];
+                player.group = parseInt(args) || player.group;
             }
             return result;
         }
@@ -197,14 +211,8 @@ function doNetworkCommand(command: string): object | null {
     }
     else if ((args = doesCommandMatch(command, [PARKMESSAGES])) !== false) {
         return {
-            messages: park.messages.map(m => ({
-                month: m.month,
-                day: m.day,
-                type: m.type,
-                text: m.text,
-                subject: (m.subject) ? m.subject : null
-            }))
-        }
+            messages: getParkMessages()
+        };
     }
     return null;
 }
@@ -216,7 +224,7 @@ function getCommand(str: string): boolean | string {
     return false;
 }
 
-function doesCommandMatch(str: string, commands: any[]): boolean | string {
+function doesCommandMatch(str: string, commands: (string | RegExp)[]): boolean | string {
     for (const command of commands) {
         if (typeof command === 'string') {
             // @ts-ignore
@@ -234,8 +242,11 @@ function doesCommandMatch(str: string, commands: any[]): boolean | string {
     return false;
 }
 
-function getPlayerByHash(hash: string): Player {
+function getPlayerByHash(hash: string | true): Player | null {
     let player = null;
+    if (hash === true) {
+        return player;
+    }
     network.players.every(p => {
         if (p.publicKeyHash === hash) {
             player = p;
@@ -312,11 +323,11 @@ function main() {
 
 registerPlugin({
     name: 'control',
-    version: '1.1.4',
+    version: '1.1.5',
     authors: ['Cory Sanin'],
     type: 'remote',
-    minApiVersion: 19,
-    targetApiVersion: 77,
+    minApiVersion: 105,
+    targetApiVersion: 105,
     licence: 'MIT',
     main
 });
