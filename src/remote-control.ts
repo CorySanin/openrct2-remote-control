@@ -1,7 +1,6 @@
 /// <reference path="../types/openrct2.d.ts" />
-import type { ParkInfo, RemoteParkMessage } from "../types/remote-control-payloads";
+/// <reference path="../types/globals.d.ts" />
 
-const NEWLINE = new RegExp('\n', 'g');
 const PREFIX = new RegExp('^(!|/)');
 const QUIT = new RegExp('^(abort|exit|halt|quit|stop)($| )', 'i');
 const SAVE = new RegExp('^save($| )', 'i');
